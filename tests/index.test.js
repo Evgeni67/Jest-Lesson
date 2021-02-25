@@ -1,6 +1,7 @@
 const server = require("../src/server")
 const request = require("supertest")(server)
 const mongoose = require("mongoose")
+const {verifyJWT} = require("../src/services/auth/tools")
 
 const UserSchema = require("../src/services/users/schema")
 const UserModel = require("mongoose").model("User", UserSchema)
@@ -82,7 +83,14 @@ describe("Stage II: testing user creation and login", () => {
         const response = await request.post("/users/login").send(validCredentials) // 
 
         const { token } = response.body
-        expect(token).toBe(validToken)
+        //expect(token).toBe(validToken)
+        const decoded = await verifyJWT(token)
+    const user = await UserModel.findOne({
+      _id: decoded._id,
+    })
+    expect(user.username).toBe(validCredentials.username)
+
+   
     })
 
     it("should NOT return a valid token when loggin in with INCORRECT credentials", async () => {
